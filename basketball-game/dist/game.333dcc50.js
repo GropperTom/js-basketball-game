@@ -184,7 +184,12 @@ function reloadCSS() {
 }
 
 module.exports = reloadCSS;
-},{"./bundle-url":"../node_modules/parcel-bundler/src/builtins/bundle-url.js"}],"../node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+},{"./bundle-url":"../node_modules/parcel-bundler/src/builtins/bundle-url.js"}],"styles/game.css":[function(require,module,exports) {
+var reloadCSS = require('_css_loader');
+
+module.hot.dispose(reloadCSS);
+module.hot.accept(reloadCSS);
+},{"./..\\assets\\background.jpg":[["background.73f2e897.jpg","assets/background.jpg"],"assets/background.jpg"],"./..\\assets\\basket.png":[["basket.5d829975.png","assets/basket.png"],"assets/basket.png"],"./..\\assets\\court.jpg":[["court.e49b2880.jpg","assets/court.jpg"],"assets/court.jpg"],"./..\\assets\\basketball.png":[["basketball.34d98e7b.png","assets/basketball.png"],"assets/basketball.png"],"./..\\assets\\special-basketball.png":[["special-basketball.1df59419.png","assets/special-basketball.png"],"assets/special-basketball.png"],"_css_loader":"../node_modules/parcel-bundler/src/builtins/css-loader.js"}],"../node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;
@@ -389,4 +394,4 @@ function hmrAcceptRun(bundle, id) {
   }
 }
 },{}]},{},["../node_modules/parcel-bundler/src/builtins/hmr-runtime.js"], null)
-//# sourceMappingURL=/index.js.map
+//# sourceMappingURL=/game.333dcc50.js.map

@@ -2,27 +2,6 @@
 
 import Basketball from "./Baskterball";
 
-// export default function SpecialBasketball(id, court) {
-//     Basketball.call(this, id, court);
-//     // this.color = 'yellow';
-//     SpecialBasketball.prototype = Object.create(Basketball.prototype);
-// }
-//
-// Object.defineProperty(SpecialBasketball.prototype, 'constructor', {
-//     value: SpecialBasketball,
-//     enumerable: false,
-//     writable: true
-// });
-//
-// SpecialBasketball.prototype.despawn = function() {
-//     this.element.hidden = true;
-//     this.court.secondBallExists = false;
-// }
-//
-// SpecialBasketball.prototype.init = function() {
-//     this.element.hidden = true;
-// }
-
 export default class SpecialBasketball extends Basketball {
     constructor(id, court) {
         super(id, court);
@@ -31,6 +10,9 @@ export default class SpecialBasketball extends Basketball {
 
     despawn() {
         this.element.hidden = true;
-        this.court.secondBallExists = false;
+        this.court.specialBallExists = false;
+        if(!this.scored) {
+            this.court.updateScore(-2);
+        }
     }
 }

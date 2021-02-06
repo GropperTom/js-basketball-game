@@ -1,25 +1,38 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>A JavaScript project</title>
-  <link rel="stylesheet" href="style.css">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>js-basket-game</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="./styles/game.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 <body>
-  <div id="app" style="position: absolute; left: 0; right: 0; top: 0; bottom: 0; background-image: url('./assets/background.jpg'); background-size: cover">
-<!--      <div id="main-menu">-->
-<!--          -->
-<!--      </div>-->
-<!--      <div id="how-to-play">-->
-<!--          -->
-<!--      </div>-->
-<!--    <span id="score">0</span>-->
-    <button id="pause-button" style="position: absolute">Pause</button>
-      <div id="basket" style="position: absolute; width: 230px; height: 150px;; left: 250px; top: 40%; z-index: 5; background-image: url('./assets/basket.png'); background-size: cover"></div>
-      <div style="height: 100%; width: 100%; display: flex; flex-direction: row; align-items: center; justify-content: center; z-index: 1">
-          <div id="court" style="background-color: saddlebrown; width: 75%; height: 75%; background-image: url('./assets/court.jpg'); background-size: cover">
-              <div id="basketball" style="position: absolute; width: 100px; height: 100px;; border-radius: 50px; z-index: 10; background-image: url('./assets/basketball.png'); background-size: cover"></div>
-              <div id="special-basketball" style="position: absolute; width: 100px; height: 100px; border-radius: 50px; z-index: 10;  background-image: url('./assets/special-basketball.png'); background-size: cover"></div>
+  <div id="app" class="app">
+      <div id="header" class="header">
+          <div style="width: 200px">
+              <button id="pause-button" class="pause-button">Pause</button>
+          </div>
+          <div class="timers-container">
+              <h2 style="color: orangered"><pre>remaining time: </pre></h2>
+              <h2 id="game-time">180 seconds</h2>
+              <h2 style="color: orangered"><pre>regular ball time: </pre></h2>
+              <h2 id="regular-ball-time">- seconds</h2>
+              <h2 style="color: orangered"><pre>special ball time: </pre></h2>
+              <h2 id="special-ball-time">- seconds</h2>
+          </div>
+          <div style="width: 200px; text-align: right">
+              <h2 id="score" style="color:black">score: 0</h2>
+          </div>
+      </div>
+
+      <div id="modal" class="modal">
+          <h1 id="modal-text" style="color: white">Paused</h1>
+      </div>
+      <div id="basket" class="basket"></div>
+      <div class="court-container">
+          <div id="court" class="court">
+              <div id="basketball" class="basketball"></div>
+              <div id="special-basketball" class="basketball special-basketball"></div>
           </div>
       </div>
       <script src="main.js"></script>

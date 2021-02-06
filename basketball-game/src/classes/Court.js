@@ -3,107 +3,172 @@
 import Basketball from "./Baskterball";
 import SpecialBasketball from "./SpecialBasketball";
 import Basket from "./Basket";
+import Timer from "./Timer";
 
 export default class Court {
     constructor(id) {
         this.specialBallExists = false;
         this.element = document.getElementById(id);
         this.regularBall = new Basketball('basketball', this);
-        this.regularBallTimerProperties = {
-            start: 0,
-            remaining: 4000,
-            timerId: -1,
-        }
         this.specialBall = new SpecialBasketball('special-basketball', this);
-        this.specialBallTimerProperties = {
-            start: 0,
-            remaining: 4000,
-            timerId: -1,
-        }
+        this.regularBallTimer = null;
+        this.specialBallTimer = null;
+        this.gameTimeUpdateTimer = null;
+        this.gameTimer = null;
+        this.regularBallUpdateTimer = null;
+        this.specialBallUpdateTimer = null;
         this.basket = new Basket('basket');
         this.scoreElement = document.getElementById('score');
         this.score = 0;
+        this.isPaused = false;
         this.init();
-
-        document.getElementById("pause-button").addEventListener('click', () => {
-            console.log(this.regularBall.lifeSpanTimer);
-            console.log(this.regularBall.activeTimer);
-        })
     }
 
     init() {
-        //
-    }
-
-    resetRegularTimerProperties() {
-        this.regularBallTimerProperties = {
-            start: 0,
-            remaining: 4000,
-            timerId: -1
-        };
-    }
-
-    resetSpecialTimerProperties() {
-        this.specialBallTimerProperties = {
-            start: 0,
-            remaining: 4000,
-            timerId: -1
-        };
-    }
-
-    spawnBall(ball, delay, randDelay, reset) {
-        const rand = Math.random() * randDelay;
-
+        const pauseModal = document.getElementById('modal');
+        const pauseButton = document.getElementById("pause-button");
+        pauseButton.addEventListener('click', () => {
+            this.isPaused = !this.isPaused;
+            if(this.isPaused) {
+                pauseModal.style.display = 'flex';
+                pauseButton.textContent = 'Resume';
+                this.pause();
+            }
+            else {
+                pauseModal.style.display = 'none';
+                pauseButton.textContent = 'Pause';
+                this.resume();
+            }
+        });
     }
 
     run() {
-        this.regularBall.spawn();
-        const ballTime = setInterval(() => {
-            this.regularBall.spawn();
-        }, 8000);
+        this.gameTimer = new Timer(this,() => {
+            this.lose();
+        }, 180, 0);
+        this.gameTimer.start();
 
-        const repeat = () => {
-            let rand = Math.random() * 11;
-            const specialBallTime = setTimeout(() => {
-                this.specialBallExists = true;
-                this.specialBall.spawn();
-                repeat();
-            }, 20000 + (rand * 1000));
+        const gameTimeUpdateTimerRepeat = () => {
+            this.gameTimeUpdateTimer = new Timer(this,(court) => {
+                document.getElementById('game-time').textContent = ((court.gameTimer.remainingTime() / 1000) | 0) + ' seconds';
+                gameTimeUpdateTimerRepeat();
+            }, 1, 0);
+            this.gameTimeUpdateTimer.start();
         }
-        repeat();
+        gameTimeUpdateTimerRepeat();
+
+        const regularTimerRepeat = (firstSpawn) => {
+            this.regularBallTimer = new Timer(this,(court) => {
+                if(!this.regularBall.scored && !firstSpawn) {
+                    this.updateScore(-1);
+                }
+                court.regularBall.spawn();
+                regularTimerRepeat(false);
+            }, 8, 0);
+            this.regularBallTimer.start();
+        }
+        regularTimerRepeat(true);
+
+        const regularBallUpdateTimerRepeat = () => {
+            this.regularBallUpdateTimer = new Timer(this,(court) => {
+                if(court.regularBall.timer != null) {
+                    document.getElementById('regular-ball-time').textContent = court.regularBall.timer.isDone || court.regularBall.scored
+                        ? '- seconds'
+                        : ((court.regularBall.timer.remainingTime() / 1000) | 0) + 1 + ' seconds';
+                }
+                else {
+                    document.getElementById('regular-ball-time').textContent = '- seconds';
+                }
+                regularBallUpdateTimerRepeat();
+            }, 1, 0);
+            this.regularBallUpdateTimer.start();
+        }
+        regularBallUpdateTimerRepeat();
+
+        const specialTimerRepeat = (firstSpawn) => {
+            this.specialBallTimer = new Timer(this,(court) => {
+                court.specialBallExists = true;
+                court.specialBall.spawn();
+                specialTimerRepeat(false);
+            }, 20, 10);
+            this.specialBallTimer.start();
+        }
+        specialTimerRepeat(true);
+
+        const specialBallUpdateTimerRepeat = () => {
+            this.specialBallUpdateTimer = new Timer(this,(court) => {
+                if(court.specialBall.timer != null) {
+                    document.getElementById('special-ball-time').textContent = ((court.specialBall.timer.remainingTime() / 1000) | 0) + 1 + ' seconds';
+                    document.getElementById('special-ball-time').textContent = court.specialBall.timer.isDone || court.specialBall.scored
+                        ? '- seconds'
+                        : ((court.specialBall.timer.remainingTime() / 1000) | 0) + 1 + ' seconds';
+                }
+                else {
+                    document.getElementById('special-ball-time').textContent = '- seconds';
+                }
+                specialBallUpdateTimerRepeat();
+            }, 1, 0);
+            this.specialBallUpdateTimer.start();
+        }
+        specialBallUpdateTimerRepeat();
     }
 
     pause() {
+        this.gameTimer.pause();
+        this.gameTimeUpdateTimer.pause();
+        this.regularBallUpdateTimer.pause();
+        this.regularBallTimer.pause();
+        this.regularBall.pause();
+        this.specialBallUpdateTimer.pause();
+        this.specialBallTimer.pause();
+        this.specialBall.pause();
+    }
 
+    resume() {
+        this.gameTimer.start();
+        this.gameTimeUpdateTimer.start();
+        this.regularBallUpdateTimer.start();
+        this.regularBallTimer.start();
+        this.regularBall.resume();
+        this.specialBallUpdateTimer.start();
+        this.specialBallTimer.start();
+        this.specialBall.resume();
+    }
+
+    updateScore(amount) {
+        this.score += amount;
+        this.scoreElement.textContent = 'score: ' + this.score;
+        this.basket.flash(amount < 0 ? 'red' : 'green');
+        if(this.score >= 10) {
+            this.win();
+        }
     }
 
     scoreBasket(ball) {
-        console.log(ball.color);
         if(ball instanceof SpecialBasketball) {
             this.specialBallExists = false;
         }
-        this.score += ball instanceof SpecialBasketball
-            ? 3
+        const updateScore = ball instanceof SpecialBasketball
+            ? 2
             : ball instanceof Basketball
                 ? this.specialBallExists
-                    ? -3
+                    ? -2
                     : 1
                 : 0;
-        console.log(this.specialBallExists, 'second exists');
-        // if(ballType === 'special') {
-        //     this.score += 3;
-        //     this.secondBallExists = false;
-        // }
-        // else if(ballType === 'regular') {
-        //     if(this.specialBallExists === true) {
-        //         console.log("-3");
-        //         this.score -= 3;
-        //     }
-        //     else {
-        //         console.log("+1");
-        //         ++this.score;
-        //     }
-        // }
-        this.scoreElement.textContent = this.score + '';
+        this.updateScore(updateScore);
+    }
+
+    lose() {
+        this.pause();
+        document.getElementById('modal-text').textContent = "Time's up! You lost!";
+        document.getElementById('modal').style.display = 'flex';
+        document.getElementById("pause-button").hidden = true;
+    }
+
+    win() {
+        this.pause();
+        document.getElementById('modal-text').textContent = "You have 10 points or more! You won!";
+        document.getElementById('modal').style.display = 'flex';
+        document.getElementById("pause-button").hidden = true;
     }
 }
