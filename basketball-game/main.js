@@ -1,11 +1,155 @@
 'use strict';
 
-import Basketball from "./Baskterball";
-import SpecialBasketball from "./SpecialBasketball";
-import Basket from "./Basket";
-import Timer from "./Timer";
+class Timer {
+    constructor(object, action, delay, randDelay) {
+        this.isPaused = true;
+        this.object = object;
+        this.action = function(obj) {action(obj)};
+        this.startTime = 0;
+        this.remaining = delay * 1000;
+        this.timerId = -1;
+        this.randDelay = randDelay;
+        this.isDone = false;
+    }
 
-export default class Court {
+    remainingTime() {
+        return this.isDone
+            ? 0
+            : this.isPaused
+                ? this.remaining
+                : this.remaining - (Date.now() - this.startTime);
+    }
+
+    start() {
+        this.isPaused = false;
+        this.startTime = Date.now();
+        const rand = ((Math.random() * (this.randDelay + 1)) | 0) * 1000;
+        this.timerId = setTimeout(() => {
+            this.isDone = true;
+            this.action(this.object);
+        }, this.remaining + rand);
+    }
+
+    pause() {
+        this.isPaused = true;
+        window.clearTimeout(this.timerId);
+        this.remaining -= Date.now() - this.startTime;
+    }
+}
+
+class Basketball {
+    constructor(id, court) {
+        this.court = court;
+        this.element = document.getElementById(id);
+        this.timer = null;
+        this.init();
+        this.scored = false;
+    }
+
+    init() {
+        this.element.hidden = true;
+    }
+
+    spawn() {
+        this.scored = false;
+        this.element.hidden = false;
+        const randomX = Math.random() * 56;
+        const randomY = Math.random() * 56;
+        this.element.style.left = 25 + randomX + '%';
+        this.element.style.top = 20 + randomY + '%';
+
+        this.element.style.backgroundColor = 'red';
+        this.timer = new Timer(this, this.enableDrag, 4, 0);
+        this.timer.start();
+    }
+
+    pause() {
+        if(this.timer) {
+            this.timer.pause();
+        }
+    }
+
+    resume() {
+        if(this.timer) {
+            this.timer.start();
+        }
+    }
+
+    enableDrag(ball) {
+        ball.drag();
+        ball.draggable = true;
+        ball.element.style.backgroundColor = 'green';
+        ball.timer = new Timer(ball, ball.disableDrag, 4, 0);
+        ball.timer.start();
+    }
+
+    disableDrag(ball) {
+        ball.draggable = false;
+        ball.despawn();
+        ball.element.onmousedown = null;
+        ball.element.onmouseup = null;
+        ball.stopDrag();
+    }
+
+    despawn() {
+        //
+    }
+
+    drag() {
+        const startDrag = (e) => {
+            e.preventDefault();
+            currTop = e.clientX;
+            currLeft = e.clientY;
+            document.onmouseup = this.stopDrag;
+            document.onmousemove = onDrag;
+        }
+
+        const onDrag = (e) => {
+            e.preventDefault();
+            topChange = currTop - e.clientX;
+            leftChange = currLeft - e.clientY;
+            currTop = e.clientX;
+            currLeft = e.clientY;
+            this.element.style.top = (this.element.offsetTop - leftChange) + 'px';
+            this.element.style.left = (this.element.offsetLeft - topChange) + 'px';
+        }
+
+        let topChange, leftChange, currTop, currLeft;
+        this.element.onmousedown = startDrag;
+        this.element.onmouseup = (e) => {
+            this.element.hidden = true;
+            const elemBelow = document.elementFromPoint(e.clientX, e.clientY);
+            this.element.hidden = false;
+            if(elemBelow.id === 'basket') {
+                this.element.hidden = true;
+                this.scored = true;
+                this.court.scoreBasket(this);
+            }
+        }
+    }
+
+    stopDrag() {
+        document.onmouseup = null;
+        document.onmousemove = null;
+    }
+}
+
+class SpecialBasketball extends Basketball {
+    constructor(id, court) {
+        super(id, court);
+        this.element.hidden = true;
+    }
+
+    despawn() {
+        this.element.hidden = true;
+        this.court.specialBallExists = false;
+        if(!this.scored) {
+            this.court.updateScore(-2);
+        }
+    }
+}
+
+class Court {
     constructor(id) {
         this.specialBallExists = false;
         this.element = document.getElementById(id);
@@ -172,3 +316,27 @@ export default class Court {
         document.getElementById("pause-button").hidden = true;
     }
 }
+
+class Basket {
+    constructor(id, court) {
+        this.court = court;
+        this.element = document.getElementById(id);
+        this.init();
+    }
+
+    init() {
+        this.element.style.borderLeftStyle = 'solid';
+        this.element.style.borderLeftWidth = '5px';
+        this.element.style.borderLeftColor = 'white';
+    }
+
+    flash(color) {
+        this.element.style.borderLeftColor = color;
+        setTimeout(() => {
+            this.element.style.borderLeftColor = 'white';
+        }, 1000);
+    }
+}
+
+const court = new Court('court');
+court.run();
